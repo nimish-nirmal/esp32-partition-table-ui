@@ -1,0 +1,19 @@
+{
+  "name": "ESP32 Partition Table UI",
+  "short_name": "ESP32 Partitions",
+  "description": "Interactive partition table builder for ESP32 family microcontrollers. Design, visualize, validate and export partitions.csv files.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0a0d12",
+  "theme_color": "#0a0d12",
+  "orientation": "any",
+  "categories": ["electronics", "utilities", "education", "developer"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='10' y='10' width='80' height='80' rx='12' fill='%23121721' stroke='%233fb950' stroke-width='4'/%3E%3Crect x='25' y='30' width='50' height='8' rx='2' fill='%237cc576'/%3E%3Crect x='25' y='46' width='32' height='8' rx='2' fill='%234dd0e1'/%3E%3Crect x='25' y='62' width='40' height='8' rx='2' fill='%238d6be6'/%3E%3C/svg%3E",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

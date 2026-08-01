@@ -1,0 +1,70 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:  # Allow manual trigger
+
+# Sets permissions for GitHub Pages deployment
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: List output files
+        run: |
+          echo "=== Project files ==="
+          ls -la
+          echo "=== HTML validation ==="
+          if [ -f "index.html" ]; then
+            echo "✓ index.html found"
+          else
+            echo "✗ index.html missing"
+            exit 1
+          fi
+          echo "=== CSS validation ==="
+          if [ -f "style.css" ]; then
+            echo "✓ style.css found"
+          else
+            echo "✗ style.css missing"
+            exit 1
+          fi
+          echo "=== JS validation ==="
+          if [ -f "app.js" ]; then
+            echo "✓ app.js found"
+          else
+            echo "✗ app.js missing"
+            exit 1
+          fi
+          echo "=== All files validated successfully ==="
+
+      - name: Upload artifact for GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

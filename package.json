@@ -1,0 +1,32 @@
+{
+  "name": "esp32-partition-table-ui",
+  "version": "1.0.0",
+  "description": "Interactive web-based partition table builder for ESP32 family microcontrollers",
+  "private": true,
+  "scripts": {
+    "serve": "python3 -m http.server 8000",
+    "start": "npm run serve"
+  },
+  "keywords": [
+    "esp32",
+    "partition-table",
+    "partitions-csv",
+    "esp-idf",
+    "flash-memory",
+    "ota",
+    "nvs",
+    "spiffs",
+    "electronics",
+    "iot"
+  ],
+  "author": "Nimish Nirmal",
+  "license": "MIT",
+  "homepage": "https://nimish-nirmal.github.io/esp32-partition-table-ui/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nimish-nirmal/esp32-partition-table-ui.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nimish-nirmal/esp32-partition-table-ui/issues"
+  }
+}

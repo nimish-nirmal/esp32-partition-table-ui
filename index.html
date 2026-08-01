@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <!-- Primary Meta Tags -->
+    <title>ESP32 Partition Table Builder - Visual Flash Memory Designer</title>
+    <meta name="title" content="ESP32 Partition Table Builder - Visual Flash Memory Designer">
+    <meta name="description" content="Interactive partition table builder for ESP32 family microcontrollers. Design, visualize, validate and export partitions.csv files for ESP-IDF, PlatformIO and Arduino.">
+    <meta name="keywords" content="ESP32, partition table, partitions.csv, ESP-IDF, flash memory, OTA, NVS, SPIFFS, LittleFS, FAT">
+    <meta name="author" content="esp32-partition-table-ui">
+    <meta name="theme-color" content="#0a0d12">
+
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="ESP32 Partition Table Builder">
+    <meta property="og:description" content="Design, visualize and export ESP32 partition table CSV files.">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='10' y='10' width='80' height='80' rx='12' fill='%23121721' stroke='%233fb950' stroke-width='4'/%3E%3Crect x='25' y='30' width='50' height='8' rx='2' fill='%237cc576'/%3E%3Crect x='25' y='46' width='32' height='8' rx='2' fill='%234dd0e1'/%3E%3Crect x='25' y='62' width='40' height='8' rx='2' fill='%238d6be6'/%3E%3C/svg%3E">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ESP32 Partitions">
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="navbar" role="banner">
+        <div class="brand">
+            <i class="fa-solid fa-microchip brand-icon" aria-hidden="true"></i>
+            <span class="brand-title">ESP32 Partition Table UI</span>
+        </div>
+
+        <nav class="nav-links" aria-label="Main navigation">
+            <a href="." class="active" aria-current="page">Builder</a>
+            <a href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/storage/partition_tables.html" target="_blank" rel="noopener">Docs</a>
+            <a href="https://github.com/nimish-nirmal/esp32-partition-table-ui" target="_blank" rel="noopener">
+                <i class="fa-brands fa-github" aria-hidden="true"></i> GitHub
+            </a>
+        </nav>
+    </header>
+
+    <main class="dashboard-container" role="main">
+
+        <!-- Header Title -->
+        <div class="dashboard-title">
+            <div>
+                <div style="display:flex;align-items:center;gap:14px;">
+                    <i class="fa-solid fa-table-cells-large icon-plug" aria-hidden="true"></i>
+                    <h1 id="board-heading">ESP32 Partition Table Builder</h1>
+                </div>
+                <p class="dashboard-subtitle">Design, visualize, and export partition tables for ESP32 family microcontrollers</p>
+            </div>
+        </div>
+
+        <!-- Filter Tags Bar: Flash Size -->
+        <section class="filter-bar" aria-label="Flash size controls">
+            <span class="filter-label"><i class="fa-solid fa-memory" aria-hidden="true"></i> Flash Size:</span>
+            <button class="filter-btn active" data-flash="4" aria-pressed="true">4 MB</button>
+            <button class="filter-btn" data-flash="8" aria-pressed="false">8 MB</button>
+            <button class="filter-btn" data-flash="16" aria-pressed="false">16 MB</button>
+            <button class="filter-btn" data-flash="32" aria-pressed="false">32 MB</button>
+            <span class="filter-separator" aria-hidden="true"></span>
+            <span class="filter-label"><i class="fa-solid fa-gauge" aria-hidden="true"></i> Partition Table Offset:</span>
+            <select id="pt-offset-select" class="compact-select" aria-label="Partition table offset">
+                <option value="0x8000">0x8000 (Default)</option>
+                <option value="0x18000">0x18000 (Large bootloader)</option>
+                <option value="custom">Custom...</option>
+            </select>
+        </section>
+
+        <!-- Main Workspace -->
+        <div class="workspace-grid">
+
+            <!-- Left Workspace: Visualization & Info -->
+            <div class="left-panel">
+                <div class="panel-header">
+                    <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
+                    Visualization & Overview
+                </div>
+
+                <!-- Flash Memory Visualizer Card -->
+                <section class="card board-card" aria-label="Flash memory map">
+                    <div class="card-header">
+                        <h2 class="card-title"><i class="fa-solid fa-chart-bar" aria-hidden="true"></i> Flash Memory Map</h2>
+                        <span class="card-badge" id="flash-size-badge">4 MB</span>
+                    </div>
+                    <div class="flash-visualizer" id="flash-visualizer" data-testid="flash-visualizer">
+                        <!-- Segments rendered dynamically -->
+                    </div>
+                    <div class="visualizer-scale" id="visualizer-scale" aria-hidden="true">
+                        <!-- Scale labels rendered dynamically -->
+                    </div>
+                </section>
+
+                <!-- Memory Stats Cards -->
+                <div class="stats-grid">
+                    <section class="card stat-card">
+                        <div class="stat-icon" style="color:#3fb950;"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></div>
+                        <div class="stat-body">
+                            <div class="stat-label">Unallocated Flash</div>
+                            <div class="stat-value" id="stat-unallocated">--</div>
+                            <div class="stat-sub" id="stat-unallocated-hint">--</div>
+                        </div>
+                    </section>
+                    <section class="card stat-card">
+                        <div class="stat-icon" style="color:#1f6beb;"><i class="fa-solid fa-layer-group" aria-hidden="true"></i></div>
+                        <div class="stat-body">
+                            <div class="stat-label">Used by Partitions</div>
+                            <div class="stat-value" id="stat-used">--</div>
+                            <div class="stat-sub" id="stat-used-hint">--</div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Partition Table Info Card -->
+                <section class="card info-card" aria-label="Partition table information">
+                    <h2 class="card-title"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Partition Table Info</h2>
+                    <ul class="specs-list" id="table-info-list">
+                        <li><span class="spec-name">Partition Table Offset</span><span class="spec-value" id="info-pt-offset">0x8000</span></li>
+                        <li><span class="spec-name">Partition Table Base</span><span class="spec-value" id="info-pt-base">0x9000</span></li>
+                        <li><span class="spec-name">Partitions</span><span class="spec-value" id="info-partition-count">0</span></li>
+                        <li><span class="spec-name">Fixed Offsets</span><span class="spec-value" id="info-fixed-offsets">No</span></li>
+                        <li><span class="spec-name">OTA Support</span><span class="spec-value" id="info-ota"><span class="status-dot status-safe"></span> Not Configured</span></li>
+                        <li><span class="spec-name">NVS Present</span><span class="spec-value" id="info-nvs">No</span></li>
+                    </ul>
+                </section>
+
+                <!-- Color Legend Card -->
+                <section class="card legend-card" aria-label="Partition color legend">
+                    <h2 class="card-title"><i class="fa-solid fa-palette" aria-hidden="true"></i> Partition Legend</h2>
+                    <div class="legend-items" id="legend-items">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </section>
+
+                <!-- Builder Controls Card -->
+                <section class="card control-card" aria-label="Builder controls">
+                    <h2 class="card-title"><i class="fa-solid fa-sliders" aria-hidden="true"></i> Builder Controls</h2>
+                    <div class="control-row">
+                        <label class="control-label" for="preset-select">Built-in partitions</label>
+                        <div class="select-wrap">
+                            <select id="preset-select" aria-label="Built-in partition presets">
+                                <!-- Options rendered dynamically -->
+                            </select>
+                            <i class="fa-solid fa-chevron-down select-arrow" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <label class="control-label" for="chip-select">Target chip</label>
+                        <div class="select-wrap">
+                            <select id="chip-select" aria-label="Target ESP32 chip">
+                                <option value="esp32">ESP32</option>
+                                <option value="esp32s2">ESP32-S2</option>
+                                <option value="esp32s3">ESP32-S3</option>
+                                <option value="esp32c3">ESP32-C3</option>
+                                <option value="esp32c6">ESP32-C6</option>
+                                <option value="esp32h2">ESP32-H2</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down select-arrow" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <label class="control-label" for="display-size-select">Show sizes in</label>
+                        <div class="select-wrap">
+                            <select id="display-size-select" aria-label="Size display unit">
+                                <option value="1024">Kilobytes (KB)</option>
+                                <option value="1048576">Megabytes (MB)</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down select-arrow" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                    <div class="control-row control-checkbox">
+                        <label class="checkbox-label" for="unequal-ota-toggle">
+                            <input type="checkbox" id="unequal-ota-toggle">
+                            <span class="checkbox-custom" aria-hidden="true"></span>
+                            Allow unequal OTA slots
+                            <i class="fa-solid fa-circle-info checkbox-info" title="For staging-firmware workflows. Keeps a small OTA image in one slot and reserves a larger slot for main firmware. Disable for normal alternating OTA updates." aria-hidden="true"></i>
+                        </label>
+                    </div>
+                    <div id="custom-offset-row" class="control-row custom-offset-row" style="display:none;">
+                        <label class="control-label" for="pt-offset-custom">Custom offset (hex)</label>
+                        <input type="text" id="pt-offset-custom" class="hex-input" placeholder="0x18000" value="0x18000">
+                        <button id="pt-offset-apply" class="btn btn-sm btn-accent" type="button">Apply</button>
+                    </div>
+                </section>
+
+                <!-- Flashing Command Card -->
+                <section class="card flash-command-card" aria-label="Flashing command">
+                    <h2 class="card-title"><i class="fa-solid fa-terminal" aria-hidden="true"></i> Flash Command</h2>
+                    <code class="command-block" id="flash-command">Select a target chip to see the esptool command.</code>
+                    <button class="btn btn-sm btn-ghost copy-btn" id="copy-command-btn" type="button">
+                        <i class="fa-regular fa-copy" aria-hidden="true"></i> Copy
+                    </button>
+                </section>
+            </div>
+
+            <!-- Right Workspace: Builder Controls & Editor -->
+            <div class="right-panel">
+                <div class="panel-header">
+                    <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+                    Configuration & Editor
+                </div>
+
+                <!-- Partition Editor Card -->
+                <section class="card editor-card" aria-label="Partition editor">
+                    <div class="card-header card-header-row">
+                        <h2 class="card-title"><i class="fa-solid fa-table-list" aria-hidden="true"></i> Partitions</h2>
+                        <div class="editor-actions">
+                            <button class="btn btn-sm btn-danger" id="clear-partitions-btn" type="button" title="Delete all partitions">
+                                <i class="fa-solid fa-trash-can" aria-hidden="true"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Add Partition Quick Buttons -->
+                    <div class="quick-add-bar" aria-label="Quick add partitions">
+                        <span class="quick-add-label">Quick add:</span>
+                        <button class="tag-btn" data-add="nvs" title="Required for Wi-Fi, BLE, Preferences API">NVS</button>
+                        <button class="tag-btn" data-add="ota" title="OTA data + ota_0 + ota_1 slots">OTA</button>
+                        <button class="tag-btn" data-add="factory" title="Single factory app">Factory</button>
+                        <button class="tag-btn" data-add="spiffs">SPIFFS</button>
+                        <button class="tag-btn" data-add="littlefs">LittleFS</button>
+                        <button class="tag-btn" data-add="fat">FAT</button>
+                        <button class="tag-btn" data-add="coredump">Core Dump</button>
+                        <button class="tag-btn" data-add="phy">PHY</button>
+                        <button class="tag-btn" data-add="custom" title="Add custom partition with editable fields">Custom</button>
+                    </div>
+
+                    <div id="partitions-list" class="partitions-list">
+                        <!-- Partition cards rendered dynamically -->
+                    </div>
+
+                    <div id="empty-partitions" class="empty-state">
+                        <i class="fa-solid fa-box-open empty-icon" aria-hidden="true"></i>
+                        <p>No partitions yet. Choose a preset above or add partitions with the quick-add buttons.</p>
+                    </div>
+                </section>
+
+                <!-- CSV Tools Card -->
+                <section class="card csv-card" aria-label="CSV tools">
+                    <div class="card-header card-header-row">
+                        <h2 class="card-title"><i class="fa-solid fa-file-csv" aria-hidden="true"></i> partitions.csv</h2>
+                        <div class="editor-actions">
+                            <button class="btn btn-sm btn-ghost" id="load-csv-btn" type="button" title="Load a CSV file">
+                                <i class="fa-solid fa-folder-open" aria-hidden="true"></i> Load
+                            </button>
+                            <button class="btn btn-sm btn-ghost" id="paste-csv-btn" type="button" title="Paste CSV from clipboard">
+                                <i class="fa-solid fa-clipboard" aria-hidden="true"></i> Paste
+                            </button>
+                            <button class="btn btn-sm btn-ghost" id="copy-csv-btn" type="button" title="Copy CSV to clipboard">
+                                <i class="fa-regular fa-copy" aria-hidden="true"></i> Copy
+                            </button>
+                            <button class="btn btn-sm btn-accent" id="download-csv-btn" type="button" title="Download partitions.csv">
+                                <i class="fa-solid fa-download" aria-hidden="true"></i> Download
+                            </button>
+                        </div>
+                    </div>
+                    <input type="file" id="csv-file-input" accept=".csv" style="display:none;" aria-hidden="true">
+                    <textarea id="csv-preview" class="csv-preview" rows="8" spellcheck="false" readonly aria-label="Generated CSV preview"># Name,Type,SubType,Offset,Size,Flags</textarea>
+                </section>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="paste-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="paste-modal-title">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="paste-modal-title"><i class="fa-solid fa-clipboard" aria-hidden="true"></i> Paste CSV</h3>
+                <button class="modal-close" id="paste-modal-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-hint">Paste an ESP-IDF partition CSV below. Offsets can be fixed or left blank to auto-align.</p>
+                <textarea id="paste-csv-input" class="csv-preview" rows="10" spellcheck="false" placeholder="# Name,Type,SubType,Offset,Size,Flags&#10;nvs,data,nvs,0x9000,0x5000,&#10;factory,app,factory,0x10000,0x100000,"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-sm btn-ghost" id="paste-csv-cancel" type="button">Cancel</button>
+                <button class="btn btn-sm btn-accent" id="paste-csv-confirm" type="button">Import</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notifications -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    <!-- Footer -->
+    <footer class="site-footer" role="contentinfo">
+        <p>
+            <i class="fa-regular fa-copyright" aria-hidden="true"></i>
+            ESP32 Partition Table UI &mdash;
+            <a href="https://github.com/nimish-nirmal/esp32-partition-table-ui" target="_blank" rel="noopener">Open Source</a> &middot;
+            Data sourced from <a href="https://www.espressif.com/en/products/socs" target="_blank" rel="noopener">Espressif</a>
+        </p>
+    </footer>
+
+    <!-- Application Logic Script -->
+    <script src="app.js"></script>
+
+    <!-- Service Worker Registration (PWA) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then((reg) => console.log('SW registered:', reg.scope))
+                    .catch((err) => console.warn('SW registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>
